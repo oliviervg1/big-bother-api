@@ -1,0 +1,63 @@
+stacker_bucket: oliviervg-cloudformation
+sys_path: ./cloudformation/stacks/
+
+stacks:
+  - name: ${namespace}-lambda-security-group
+    class_path: security_groups.SecurityGroup
+    variables:
+      Description: "${namespace} lambda security group"
+      VpcId: ${xref core-vpc::VpcId}
+      SecurityGroupIngress: []
+      SecurityGroupEgress:
+        - FromPort: 3306
+          ToPort: 3306
+          CidrIp: 10.0.2.0/24
+          IpProtocol: "6"
+        - FromPort: 3306
+          ToPort: 3306
+          CidrIp: 10.0.3.0/24
+          IpProtocol: "6"
+      Tags:
+        Name: ${namespace}-database
+
+  - name: ${namespace}-database-security-group
+    class_path: security_groups.SecurityGroup
+    variables:
+      Description: "${namespace} database security group"
+      VpcId: ${xref core-vpc::VpcId}
+      SecurityGroupIngress:
+        - FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: ${output ${namespace}-lambda-security-group::SecurityGroupId}
+          IpProtocol: "6"
+        - FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: sg-feb0d197  # algo VPN
+          IpProtocol: "6"
+      SecurityGroupEgress:
+        - FromPort: 1337
+          ToPort: 1337
+          CidrIp: 127.0.0.1/32
+          IpProtocol: "6"
+      Tags:
+        Name: ${namespace}-database
+
+  - name: ${namespace}-database
+    class_path: rds.Database
+    variables:
+      Name: ${namespace}
+      Username: ${namespace}
+      Password: ${file plain:file://../../db_password.txt}
+      SubnetIds:
+        - ${xref core-subnets::PrivateSubnetEuWest2aId}
+        - ${xref core-subnets::PrivateSubnetEuWest2bId}
+      SecurityGroups:
+        - ${output ${namespace}-database-security-group::SecurityGroupId}
+      Engine: mysql
+      EngineVersion: 5.7.11
+      InstanceClass: db.t2.micro
+      Size: 10
+      StorageEncryption: false
+      MultiAz: false
+      Tags:
+        Name: ${namespace}
