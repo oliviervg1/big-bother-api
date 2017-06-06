@@ -4,10 +4,10 @@ import datetime
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType
 
-from models import Room as RoomModel
-from models import Person as PersonModel
+from .models import Room as RoomModel
+from .models import Person as PersonModel
 
-from db import Session
+from .db import Session
 
 
 class RoomInput(graphene.InputObjectType):

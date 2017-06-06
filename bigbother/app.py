@@ -3,8 +3,8 @@
 from flask import Flask
 from flask_graphql import GraphQLView
 
-from db import Session, init_db
-from schema import schema
+from .db import Session, init_db
+from .schema import schema
 
 app = Flask(__name__)
 
