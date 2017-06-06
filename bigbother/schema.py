@@ -1,4 +1,5 @@
 import graphene
+import datetime
 
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField, SQLAlchemyObjectType
@@ -28,21 +29,6 @@ class Person(SQLAlchemyObjectType):
         interfaces = (relay.Node, )
 
 
-class UpdatePerson(relay.ClientIDMutation):
-
-    class Input:
-        name = graphene.String(required=True)
-        city = graphene.String(required=True)
-
-    person = graphene.Field(Person)
-
-    @classmethod
-    def mutate_and_get_payload(cls, args, context, info):
-        name = args['name']
-        city = args['city']
-        return UpdatePerson(name=name, city=city)
-
-
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
     all_rooms = SQLAlchemyConnectionField(Room)
@@ -65,4 +51,36 @@ class Query(graphene.ObjectType):
         ).filter(PersonModel.full_name.like('%{}%'.format(args['name']))).all()
 
 
-schema = graphene.Schema(query=Query, types=[Person, Room])
+class UpdatePerson(relay.ClientIDMutation):
+
+    class Input:
+        full_name = graphene.String(required=True)
+        room_name = graphene.String(required=True)
+        room_city = graphene.String(required=True)
+
+    person = graphene.Field(Person)
+
+    @classmethod
+    def mutate_and_get_payload(cls, args, context, info):
+        session = Session()
+        room = session.query(
+            RoomModel
+        ).filter_by(name=args['room_name'], city=args['room_city']).one()
+        person = session.query(
+            PersonModel
+        ).filter_by(full_name=args['full_name']).one()
+        person.room = room
+        person.last_seen = datetime.datetime.utcnow()
+        try:
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        return UpdatePerson(person=person)
+
+
+class Mutation(graphene.ObjectType):
+    update_person = UpdatePerson.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation, types=[Person, Room])
