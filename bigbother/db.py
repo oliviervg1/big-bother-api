@@ -15,7 +15,7 @@ Base.query = Session.query_property()
 
 
 def init_db():
-    from models import Room, Person
+    from .models import Room, Person
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
