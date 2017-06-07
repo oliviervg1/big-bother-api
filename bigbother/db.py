@@ -29,10 +29,7 @@ def init_db():
     session.add_all([main_area, kitchen, reception, juannex])
 
     j_s = Person(full_name='john smith')
-    j_s.room = kitchen
     j_d = Person(full_name='john doe')
-    j_d.room = kitchen
     a_s = Person(full_name='alice springs')
-    a_s.room = juannex
     session.add_all([j_s, j_d, a_s])
     session.commit()

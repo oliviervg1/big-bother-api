@@ -35,7 +35,10 @@ class Query(graphene.ObjectType):
     all_people = SQLAlchemyConnectionField(Person)
 
     find_room = graphene.Field(Room, room=RoomInput())
-    find_person = graphene.List(Person, name=graphene.String())
+    find_person_by_name = graphene.List(Person, name=graphene.String())
+    find_person_by_face_id = graphene.Field(
+        Person, rekognition_face_id=graphene.String()
+    )
 
     def resolve_find_room(self, args, context, info):
         session = Session()
@@ -44,11 +47,17 @@ class Query(graphene.ObjectType):
             RoomModel
         ).filter_by(name=room['name'], city=room['city']).one()
 
-    def resolve_find_person(self, args, context, info):
+    def resolve_find_person_by_name(self, args, context, info):
         session = Session()
         return session.query(
             PersonModel
         ).filter(PersonModel.full_name.like('%{}%'.format(args['name']))).all()
+
+    def resolve_find_person_by_face_id(self, args, context, info):
+        session = Session()
+        return session.query(
+            PersonModel
+        ).filter_by(rekognition_face_id=args['rekognition_face_id']).one()
 
 
 class UpdatePerson(relay.ClientIDMutation):

@@ -21,3 +21,7 @@ infrastructure: requirements lint
 		-r eu-west-2 \
 		cloudformation/config/bigbother.env \
 		cloudformation/config/bigbother.yaml
+
+.PHONY: deploy
+deploy: requirements lint
+	. env/bin/activate && zappa update dev
