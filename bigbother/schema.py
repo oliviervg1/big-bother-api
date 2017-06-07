@@ -34,17 +34,17 @@ class Query(graphene.ObjectType):
     all_rooms = SQLAlchemyConnectionField(Room)
     all_people = SQLAlchemyConnectionField(Person)
 
-    room = graphene.Field(Room, room=RoomInput())
-    person = graphene.List(Person, name=graphene.String())
+    find_room = graphene.Field(Room, room=RoomInput())
+    find_person = graphene.List(Person, name=graphene.String())
 
-    def resolve_room(self, args, context, info):
+    def resolve_find_room(self, args, context, info):
         session = Session()
         room = args['room']
         return session.query(
             RoomModel
         ).filter_by(name=room['name'], city=room['city']).one()
 
-    def resolve_person(self, args, context, info):
+    def resolve_find_person(self, args, context, info):
         session = Session()
         return session.query(
             PersonModel
